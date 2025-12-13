@@ -1,7 +1,27 @@
 <!--pages/index.wxml-->
 <view class="container">
+  <!-- 顶部导航栏 -->
+  <view class="top-bar">
+    <view class="title">图片拖拽</view>
+    <view class="group-btn" bindtap="showGroupModal">
+      <text class="group-icon">📁</text>
+      <text class="group-text">分组管理</text>
+    </view>
+  </view>
+
   <!-- textarea -->
   <textarea placeholder="请输入点什么" placeholder-class="placeholder-class"></textarea>
+
+  <!-- 分组tab切换 -->
+  <view class="group-tabs">
+    <scroll-view scroll-x="true" class="tabs-scroll">
+      <view class="tab-item {{currentGroupId === item.id ? 'active' : ''}}" wx:for="{{groups}}" wx:key="id" bindtap="switchGroup" data-group-id="{{item.id}}">
+        <view class="tab-color" style="background-color: {{item.color}}"></view>
+        <text class="tab-name">{{item.name}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
   <view class="image-drag-container">
     <movable-area class="movable-area" style="min-height:{{imageWitdh}}px;height:{{areaHeight}}px">
       <view class="image-choose-container">
@@ -18,4 +38,36 @@
     </movable-area>
   </view>
   <button>发布</button>
+</view>
+
+<!-- 分组管理弹窗 -->
+<view class="group-modal" wx:if="{{showGroupModal}}">
+  <view class="modal-overlay" bindtap="hideGroupModal"></view>
+  <view class="modal-content">
+    <view class="modal-title">添加分组</view>
+
+    <view class="form-item">
+      <text class="label">分组名称</text>
+      <input class="input" placeholder="请输入分组名称" value="{{newGroupName}}" bindinput="onGroupNameInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="label">分组颜色</text>
+      <view class="color-picker">
+        <view class="color-option" wx:for="{{presetColors}}" wx:key="value">
+          <view class="color-dot" style="background-color: {{item.value}}" bindtap="selectColor" data-color="{{item.value}}"></view>
+          <text class="color-name" wx:if="{{item.name}}">{{item.name}}</text>
+        </view>
+      </view>
+      <view class="selected-color">
+        <text>已选颜色:</text>
+        <view class="selected-color-dot" style="background-color: {{selectedColor}}"></view>
+      </view>
+    </view>
+
+    <view class="modal-actions">
+      <button class="action-btn cancel-btn" bindtap="hideGroupModal">取消</button>
+      <button class="action-btn confirm-btn" bindtap="confirmAddGroup">确认</button>
+    </view>
+  </view>
 </view>
