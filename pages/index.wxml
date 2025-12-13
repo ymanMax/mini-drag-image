@@ -1,5 +1,27 @@
 <!--pages/index.wxml-->
 <view class="container">
+  <!-- 分组切换 tab 栏 -->
+  <view class="group-tabs">
+    <scroll-view scroll-x="true" class="tabs-scroll">
+      <view class="tabs-wrapper">
+        <view
+          class="tab-item {{currentGroupId === item.id ? 'active' : ''}}"
+          wx:for="{{groups}}"
+          wx:key="id"
+          data-groupid="{{item.id}}"
+          bindtap="switchGroup"
+        >
+          <view class="tab-name" style="color: {{currentGroupId === item.id ? item.color : '#666666'}}">
+            {{item.name}}
+          </view>
+          <view class="tab-count" style="background-color: {{currentGroupId === item.id ? item.color : '#f5f5f5'}}; color: {{currentGroupId === item.id ? '#ffffff' : '#999999'}}">
+            {{item.imageCount}}
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- textarea -->
   <textarea placeholder="请输入点什么" placeholder-class="placeholder-class"></textarea>
   <view class="image-drag-container">
