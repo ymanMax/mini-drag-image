@@ -1,26 +1,82 @@
 // pages/index.js
 const app = getApp()
+const imageGroups = require('../../utils/imageGroups.js')
+
 Page({
 
   /**
    * 页面的初始数据
    */
   data: {
-    images:[],
-    imageWitdh:0,
-    x:0,  // movable-view的坐标
-    y:0,
-    areaHeight:0,  // movable-area的高度
+    images: [],
+    imageWitdh: 0,
+    x: 0,  // movable-view的坐标
+    y: 0,
+    areaHeight: 0,  // movable-area的高度
     hidden: true, // movable-view是否隐藏
-    currentImg:'', // movable-view的图片地址
-    currentIndex:0, // 要改变顺序的图片的下标
-    pointsArr:[], // 每张图片的坐标
-    flag:true, // 是否是长按
-    scrollTop:0, // 滚动条距离顶部的距离
+    currentImg: '', // movable-view的图片地址
+    currentIndex: 0, // 要改变顺序的图片的下标
+    pointsArr: [], // 每张图片的坐标
+    flag: true, // 是否是长按
+    scrollTop: 0, // 滚动条距离顶部的距离
+
+    // 分组相关数据
+    groups: [],
+    currentGroupId: 'all',
+  },
+
+  /**
+   * 生命周期函数--监听页面加载
+   */
+  onLoad: function (options) {
+    // 生成Mock数据
+    imageGroups.generateMockData()
+    // 加载分组数据
+    this.loadGroupsData()
+    // 加载当前分组的图片
+    this.loadCurrentGroupImages()
+  },
+
+  // 加载分组数据
+  loadGroupsData: function () {
+    const groups = imageGroups.getAllGroups()
+    this.setData({
+      groups: groups
+    })
+  },
+
+  // 加载当前分组的图片
+  loadCurrentGroupImages: function () {
+    const images = imageGroups.getImagesByGroupId(this.data.currentGroupId)
+    // 提取url字段
+    const imageUrls = images.map(item => item.url)
+    this.setData({
+      images: imageUrls
+    }, function () {
+      // 更新面积
+      this._handleComputedArea()
+    })
+  },
+
+  // 切换分组
+  switchGroup: function (e) {
+    const groupId = e.currentTarget.dataset.groupid
+    if (groupId === this.data.currentGroupId) {
+      return
+    }
+
+    this.setData({
+      currentGroupId: groupId,
+      // 重置滚动位置
+      scrollTop: 0
+    }, function () {
+      // 加载新分组的图片
+      this.loadCurrentGroupImages()
+    })
   },
 
   // 计算图片宽度
-  _handleComputedImage:function(e){
+  _handleComputedImage: function (e) {
     const windowWidth = app.globalData.systemInfo.windowWidth;
     const width = windowWidth - 16;
     const imageWitdh = (width - 16) / 3;
@@ -47,23 +103,27 @@ Page({
       sourceType: ['album', 'camera'], //可选择性开放访问相册、相机
       success: res => {
         let images = that.data.images;
-        for (let i = 0; i < res.tempFilePaths.length;i++){
+        for (let i = 0; i < res.tempFilePaths.length; i++) {
           images.push(res.tempFilePaths[i]);
+          // 将图片添加到当前分组
+          imageGroups.addImageToGroup(that.data.currentGroupId, res.tempFilePaths[i])
         }
         that.setData({
           images
-        },function(){
+        }, function () {
           //上传完之后更新面积
           that._handleComputedArea();
+          // 更新分组数据（图片数量可能变化）
+          that.loadGroupsData()
         });
-        
+
       },
       fail: err => console.log(err)
     })
   },
 
   // 预览图片
-  handlePreview:function(e){
+  handlePreview: function (e) {
     let index = e.target.dataset.index;
     let images = this.data.images;
     wx.previewImage({
@@ -73,19 +133,25 @@ Page({
   },
 
   // 删除图片
-  handleDelete:function(e){
+  handleDelete: function (e) {
     let index = e.target.dataset.index;
     let images = this.data.images;
+    const imageUrl = images[index]
+
     images.splice(index, 1);
     this.setData({
       images
-    },function(){
+    }, function () {
       this._handleComputedArea();
+      // 从分组中删除图片
+      imageGroups.removeImageFromGroup(this.data.currentGroupId, imageUrl)
+      // 更新分组数据（图片数量可能变化）
+      this.loadGroupsData()
     });
   },
 
   // 计算movable-area的高度
-  _handleComputedArea:function(e){
+  _handleComputedArea: function (e) {
     let that = this;
     wx.createSelectorQuery().selectAll('.image-choose-container').boundingClientRect(function (rect) {
       that.setData({
@@ -95,7 +161,7 @@ Page({
   },
 
   // 计算每张图片的坐标
-  _handleComputedPoints(e){
+  _handleComputedPoints(e) {
     let that = this;
     var query = wx.createSelectorQuery();
     var nodesRef = query.selectAll(".image-item");
@@ -110,7 +176,7 @@ Page({
   },
 
   // 长按图片
-  handleLongTap:function(e){
+  handleLongTap: function (e) {
     // 计算每张图片的坐标
     this._handleComputedPoints();
     this.setData({
@@ -124,10 +190,10 @@ Page({
   },
 
   // 移动的过程中
-  handleTouchMove:function(e){
+  handleTouchMove: function (e) {
     let x = e.touches[0].pageX;
     let y = e.touches[0].pageY;
-   // 首先先获得当前image-choose-container距离顶部的距离
+    // 首先先获得当前image-choose-container距离顶部的距离
     let that = this;
     wx.createSelectorQuery().selectAll('.image-choose-container').boundingClientRect(function (rect) {
       let top = rect[0].top;
@@ -143,12 +209,12 @@ Page({
   },
 
   // 移动结束的时候
-  handleTouchEnd:function(e){
+  handleTouchEnd: function (e) {
     if (!this.data.flag) {
       // 非长按情况下
       return;
     }
-    let  x = e.changedTouches[0].pageX;
+    let x = e.changedTouches[0].pageX;
     let y = e.changedTouches[0].pageY - this.data.scrollTop;
     const pointsArr = this.data.pointsArr;
     let data = this.data.images;
@@ -182,7 +248,7 @@ Page({
   },
 
   // 监听滚动
-  onPageScroll:function(e){
+  onPageScroll: function (e) {
     this.data.scrollTop = e.scrollTop;
   }
 

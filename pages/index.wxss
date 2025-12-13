@@ -5,6 +5,57 @@
   box-sizing:border-box;
 }
 
+/* 分组 tab 栏样式 */
+.group-tabs{
+  margin-bottom: 24rpx;
+  background: #ffffff;
+  border-radius: 12rpx;
+  padding: 16rpx;
+  box-sizing: border-box;
+}
+
+.tabs-scroll{
+  white-space: nowrap;
+}
+
+.tabs-wrapper{
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.tab-item{
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 20rpx;
+  border-radius: 24rpx;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.tab-item.active{
+  background: #f0f0f0;
+  transform: translateY(-1rpx);
+}
+
+.tab-name{
+  font-size: 28rpx;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.tab-count{
+  font-size: 20rpx;
+  font-weight: 500;
+  line-height: 1;
+  padding: 4rpx 8rpx;
+  border-radius: 10rpx;
+  min-width: 28rpx;
+  text-align: center;
+}
+
 textarea{
   width: 100%;
   height:300rpx;
